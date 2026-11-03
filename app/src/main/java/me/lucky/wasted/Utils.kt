@@ -112,7 +112,9 @@ class Utils(private val ctx: Context) {
         val enabled = prefs.isEnabled
         val triggers = prefs.triggers
         val isUSB = triggers.and(Trigger.USB.value) != 0
-        val foregroundEnabled = enabled && (triggers.and(Trigger.LOCK.value) != 0 || isUSB)
+        val isAirplane = triggers.and(Trigger.AIRPLANE_MODE.value) != 0
+        val foregroundEnabled = enabled &&
+            (triggers.and(Trigger.LOCK.value) != 0 || isUSB || isAirplane)
         val isGeofence = triggers.and(Trigger.GEOFENCE.value) != 0
         setForegroundEnabled(foregroundEnabled)
         setComponentEnabled(RestartReceiver::class.java, foregroundEnabled || (enabled && isGeofence))

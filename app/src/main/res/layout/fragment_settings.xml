@@ -149,6 +149,25 @@
                 android:layout_marginVertical="5dp" />
 
             <CheckBox
+                android:id="@+id/airplane"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layoutDirection="rtl"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:text="@string/trigger_airplane" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/trigger_airplane_description"
+                android:textAppearance="?attr/textAppearanceBodySmall" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="5dp" />
+
+            <CheckBox
                 android:id="@+id/application"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

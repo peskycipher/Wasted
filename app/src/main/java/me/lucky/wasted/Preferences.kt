@@ -160,6 +160,7 @@ enum class Trigger(val value: Int) {
     USB(1 shl 6),
     APPLICATION(1 shl 7),
     GEOFENCE(1 shl 8),
+    AIRPLANE_MODE(1 shl 9),
 }
 
 enum class ApplicationOption(val value: Int) {

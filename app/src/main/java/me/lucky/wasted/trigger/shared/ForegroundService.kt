@@ -14,6 +14,7 @@ import me.lucky.wasted.Preferences
 import me.lucky.wasted.R
 import me.lucky.wasted.Trigger
 import me.lucky.wasted.Utils
+import me.lucky.wasted.trigger.airplane.AirplaneReceiver
 import me.lucky.wasted.trigger.lock.LockJobManager
 
 class ForegroundService : Service() {
@@ -25,6 +26,7 @@ class ForegroundService : Service() {
     private lateinit var prefs: Preferences
     private lateinit var lockReceiver: LockReceiver
     private val usbReceiver = UsbReceiver()
+    private val airplaneReceiver = AirplaneReceiver()
 
     override fun onCreate() {
         super.onCreate()
@@ -47,6 +49,14 @@ class ForegroundService : Service() {
             })
         if (triggers.and(Trigger.USB.value) != 0)
             registerReceiver(usbReceiver, IntentFilter(ACTION_USB_STATE))
+        if (triggers.and(Trigger.AIRPLANE_MODE.value) != 0) {
+            registerReceiver(
+                airplaneReceiver,
+                IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED),
+            )
+            // catch airplane mode turned on while the service was dead
+            if (AirplaneReceiver.isOn(this)) Utils(this).fire(Trigger.AIRPLANE_MODE)
+        }
     }
 
     private fun deinit() {
@@ -55,6 +65,7 @@ class ForegroundService : Service() {
         }
         unregister(lockReceiver)
         unregister(usbReceiver)
+        unregister(airplaneReceiver)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

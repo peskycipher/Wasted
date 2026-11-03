@@ -19,8 +19,11 @@ class RestartReceiver : BroadcastReceiver() {
         if (!prefs.isEnabled || (
                 triggers.and(Trigger.LOCK.value) == 0 &&
                 triggers.and(Trigger.USB.value) == 0 &&
+                triggers.and(Trigger.AIRPLANE_MODE.value) == 0 &&
                 triggers.and(Trigger.GEOFENCE.value) == 0)) return
-        if (triggers.and(Trigger.LOCK.value) != 0 || triggers.and(Trigger.USB.value) != 0) {
+        if (triggers.and(Trigger.LOCK.value) != 0 ||
+            triggers.and(Trigger.USB.value) != 0 ||
+            triggers.and(Trigger.AIRPLANE_MODE.value) != 0) {
             ContextCompat.startForegroundService(
                 context.applicationContext,
                 Intent(context.applicationContext, ForegroundService::class.java),

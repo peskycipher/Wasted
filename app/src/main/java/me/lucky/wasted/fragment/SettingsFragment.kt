@@ -105,6 +105,7 @@ class SettingsFragment : Fragment() {
             notification.isChecked = triggers.and(Trigger.NOTIFICATION.value) != 0
             lock.isChecked = triggers.and(Trigger.LOCK.value) != 0
             usb.isChecked = triggers.and(Trigger.USB.value) != 0
+            airplane.isChecked = triggers.and(Trigger.AIRPLANE_MODE.value) != 0
             application.isChecked = triggers.and(Trigger.APPLICATION.value) != 0
             geofence.isChecked = triggers.and(Trigger.GEOFENCE.value) != 0
         }
@@ -138,6 +139,10 @@ class SettingsFragment : Fragment() {
         }
         usb.setOnCheckedChangeListener { _, isChecked ->
             prefs.triggers = Utils.setFlag(prefs.triggers, Trigger.USB.value, isChecked)
+            utils.updateForegroundRequiredEnabled()
+        }
+        airplane.setOnCheckedChangeListener { _, isChecked ->
+            prefs.triggers = Utils.setFlag(prefs.triggers, Trigger.AIRPLANE_MODE.value, isChecked)
             utils.updateForegroundRequiredEnabled()
         }
         application.setOnCheckedChangeListener { _, isChecked ->
