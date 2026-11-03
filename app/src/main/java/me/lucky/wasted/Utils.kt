@@ -1,5 +1,6 @@
 package me.lucky.wasted
 
+import android.Manifest
 import android.app.KeyguardManager
 import android.content.ComponentName
 import android.content.Context
@@ -14,6 +15,7 @@ import me.lucky.wasted.trigger.panic.PanicConnectionActivity
 import me.lucky.wasted.trigger.panic.PanicResponderActivity
 import me.lucky.wasted.trigger.shared.ForegroundService
 import me.lucky.wasted.trigger.shared.RestartReceiver
+import me.lucky.wasted.trigger.geofence.GeofenceService
 import me.lucky.wasted.trigger.shortcut.ShortcutActivity
 import me.lucky.wasted.trigger.shortcut.ShortcutManager
 import me.lucky.wasted.trigger.tile.TileService
@@ -39,6 +41,26 @@ class Utils(private val ctx: Context) {
         setNotificationEnabled(enabled && triggers.and(Trigger.NOTIFICATION.value) != 0)
         updateForegroundRequiredEnabled()
         updateApplicationEnabled()
+        updateGeofenceEnabled()
+    }
+
+    fun setGeofenceEnabled(enabled: Boolean) {
+        if (!enabled) {
+            ctx.stopService(Intent(ctx.applicationContext, GeofenceService::class.java))
+            return
+        }
+        if (ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return
+        Intent(ctx.applicationContext, GeofenceService::class.java).also {
+            ContextCompat.startForegroundService(ctx.applicationContext, it)
+        }
+    }
+
+    fun updateGeofenceEnabled() {
+        val enabled = prefs.isEnabled &&
+            prefs.triggers.and(Trigger.GEOFENCE.value) != 0
+        setGeofenceEnabled(enabled)
     }
 
     fun setPanicKitEnabled(enabled: Boolean) {
@@ -91,8 +113,9 @@ class Utils(private val ctx: Context) {
         val triggers = prefs.triggers
         val isUSB = triggers.and(Trigger.USB.value) != 0
         val foregroundEnabled = enabled && (triggers.and(Trigger.LOCK.value) != 0 || isUSB)
+        val isGeofence = triggers.and(Trigger.GEOFENCE.value) != 0
         setForegroundEnabled(foregroundEnabled)
-        setComponentEnabled(RestartReceiver::class.java, foregroundEnabled)
+        setComponentEnabled(RestartReceiver::class.java, foregroundEnabled || (enabled && isGeofence))
         setComponentEnabled(UsbReceiver::class.java, enabled && isUSB)
     }
 

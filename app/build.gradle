@@ -56,4 +56,5 @@ dependencies {
     implementation 'androidx.biometric:biometric:1.1.0'
     implementation 'androidx.drawerlayout:drawerlayout:1.1.1'
     implementation 'info.guardianproject.panic:panic:1.0'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
 }

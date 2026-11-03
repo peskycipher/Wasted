@@ -1,15 +1,22 @@
 package me.lucky.wasted.fragment
 
+import android.Manifest
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 
 import me.lucky.wasted.Preferences
+import me.lucky.wasted.R
 import me.lucky.wasted.Trigger
 import me.lucky.wasted.Utils
 import me.lucky.wasted.databinding.FragmentSettingsBinding
@@ -23,6 +30,44 @@ class SettingsFragment : Fragment() {
 
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         prefs.copyTo(prefsdb, key)
+    }
+
+    private val finePermissions = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+    )
+
+    // combined requests ignore BACKGROUND; it must be requested on its own (Q+)
+    private val fineRequester =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            if (it.values.any { granted -> granted }) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                    backgroundRequester.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                else finalizeGeofenceEnable(true)
+            } else finalizeGeofenceEnable(false)
+        }
+
+    private val backgroundRequester =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            // a denied background permission still allows while-in-use fixes
+            // from a foreground service that was started while in use
+            finalizeGeofenceEnable(true)
+        }
+
+    private fun finalizeGeofenceEnable(ok: Boolean) {
+        if (ok) {
+            prefs.triggers = Utils.setFlag(prefs.triggers, Trigger.GEOFENCE.value, true)
+            binding.geofence.isChecked = true
+            utils.setGeofenceEnabled(true)
+        } else {
+            prefs.triggers = Utils.setFlag(prefs.triggers, Trigger.GEOFENCE.value, false)
+            binding.geofence.isChecked = false
+            Toast.makeText(
+                ctx,
+                R.string.geofence_no_location,
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
     }
 
     override fun onCreateView(
@@ -61,6 +106,7 @@ class SettingsFragment : Fragment() {
             lock.isChecked = triggers.and(Trigger.LOCK.value) != 0
             usb.isChecked = triggers.and(Trigger.USB.value) != 0
             application.isChecked = triggers.and(Trigger.APPLICATION.value) != 0
+            geofence.isChecked = triggers.and(Trigger.GEOFENCE.value) != 0
         }
     }
 
@@ -98,5 +144,19 @@ class SettingsFragment : Fragment() {
             prefs.triggers = Utils.setFlag(prefs.triggers, Trigger.APPLICATION.value, isChecked)
             utils.updateApplicationEnabled()
         }
+        geofence.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                // the flag is only written once permissions have been settled
+                binding.geofence.isChecked = false
+                fineRequester.launch(finePermissions)
+            } else {
+                prefs.triggers = Utils.setFlag(prefs.triggers, Trigger.GEOFENCE.value, false)
+                utils.setGeofenceEnabled(false)
+            }
+        }
+    }
+
+    private fun hasLocationPermissions() = finePermissions.all {
+        ContextCompat.checkSelfPermission(ctx, it) == PackageManager.PERMISSION_GRANTED
     }
 }

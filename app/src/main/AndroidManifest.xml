@@ -4,6 +4,10 @@
     package="me.lucky.wasted">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-feature android:name="android.software.device_admin" android:required="true" />
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
@@ -143,6 +147,12 @@
             android:name=".trigger.shared.ForegroundService"
             android:directBootAware="true"
             android:exported="false">
+        </service>
+
+        <service
+            android:name=".trigger.geofence.GeofenceService"
+            android:exported="false"
+            android:foregroundServiceType="location">
         </service>
 
         <receiver

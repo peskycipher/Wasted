@@ -30,6 +30,11 @@
     </group>
 
     <item
+        android:id="@+id/nav_locations"
+        android:title="@string/locations"
+        android:checkable="true" />
+
+    <item
         android:id="@+id/nav_recast"
         android:title="@string/recast"
         android:checkable="true" />
