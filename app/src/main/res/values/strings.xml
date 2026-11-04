@@ -48,7 +48,7 @@
     <string name="trigger_geofence_dwell_hint">dwell</string>
     <string name="trigger_geofence_dwell_helper_text">How long to stay inside a police-station fence before it fires. Modifiers: [d]ays [h]ours [m]inutes</string>
     <string name="geofence_no_location">Location unavailable — the police-station trigger cannot work.</string>
-    <string name="trigger_geofence_dwell_error">Use 5m or more. Modifiers: [d]ays [h]ours [m]inutes</string>
+    <string name="trigger_geofence_dwell_error">Use 1m or more. Modifiers: [d]ays [h]ours [m]inutes</string>
     <string name="signal">Signal</string>
     <string name="telegram">Telegram</string>
     <string name="threema">Threema</string>

@@ -45,7 +45,7 @@ class LocationsFragment : Fragment() {
             val str = text?.toString() ?: ""
             if (str.isEmpty()) return@doAfterTextChanged
             val minutes = parseDuration(str)
-            if (minutes == null || minutes < 5) {
+            if (minutes == null || minutes < 1) {
                 geofenceDwell.error = ctx.getString(R.string.trigger_geofence_dwell_error)
                 return@doAfterTextChanged
             }

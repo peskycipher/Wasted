@@ -13,7 +13,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
     companion object {
         private const val DEFAULT_TRIGGER_LOCK_COUNT = 7 * 24 * 60
         private const val DEFAULT_TRIGGER_TILE_DELAY = 2000L
-        private const val DEFAULT_TRIGGER_GEOFENCE_DWELL = 15
+        private const val DEFAULT_TRIGGER_GEOFENCE_DWELL = 1
 
         private const val ENABLED = "enabled"
         private const val SECRET = "secret"
