@@ -19,8 +19,10 @@ file cannot be read.
 unlock code — in a **plaintext, device-protected** `SharedPreferences` file,
 maintained automatically by the class itself (every write to an encrypted
 instance is mirrored). `Preferences.new()` returns the encrypted instance when
-the user is unlocked and the device-protected mirror when locked, so all
-direct-boot consumers read one interface without knowing which file backs it.
+the user is unlocked and the encrypted-capable device-protected instance when
+locked (on API < 24, where direct boot doesn't exist, the legacy non-encrypted
+instance), so all direct-boot consumers read one interface without knowing
+which file backs it.
 
 The plaintext mirror of the secret is deliberate and load-bearing: excluding it
 would break pre-unlock firing, i.e. the wipe at boot. Device-protected storage
