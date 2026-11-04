@@ -20,6 +20,7 @@ import me.lucky.wasted.R
 import me.lucky.wasted.Trigger
 import me.lucky.wasted.fire.Fire
 import me.lucky.wasted.trigger.shared.NotificationManager
+import me.lucky.wasted.trigger.geofence.GeofenceDebugLog
 
 class GeofenceService : Service() {
     companion object {
@@ -37,20 +38,33 @@ class GeofenceService : Service() {
 
     private val callback = object : LocationCallback() {
         override fun onLocationAvailability(availability: LocationAvailability) {
+            GeofenceDebugLog.d(this@GeofenceService,
+                "availability=${availability.isLocationAvailable}")
             if (!availability.isLocationAvailable) showNotification(unavailable = true)
         }
 
         override fun onLocationResult(result: LocationResult) {
             showNotification(unavailable = false)
-            val loc = result.lastLocation ?: return
-            when (controller.onFix(
+            val loc = result.lastLocation ?: run {
+                GeofenceDebugLog.d(this@GeofenceService, "fix: no lastLocation"); return
+            }
+            GeofenceDebugLog.d(this@GeofenceService,
+                "fix lat=${loc.latitude} lon=${loc.longitude} acc=${loc.accuracy}")
+            when (val effect = controller.onFix(
                 loc.latitude,
                 loc.longitude,
                 loc.accuracy,
                 loc.time,
                 prefs.triggerGeofenceDwell,
             )) {
-                DwellEffect.Fired -> stopSelf()
+                DwellEffect.Fired -> {
+                    GeofenceDebugLog.d(this@GeofenceService,
+                        "DWELL FIRED — trigger GEOFENCE fires")
+                    stopSelf()
+                }
+                is DwellEffect.Persist ->
+                    GeofenceDebugLog.d(this@GeofenceService,
+                        "dwell since=${effect.sinceMs} (${prefs.triggerGeofenceDwell}m required)")
                 else -> {}
             }
         }
@@ -68,6 +82,7 @@ class GeofenceService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        GeofenceDebugLog.d(this, "service start (intent=${intent != null})")
         startForegroundCompat()
         val client = LocationServices.getFusedLocationProviderClient(this)
         val request = LocationRequest.Builder(
@@ -85,6 +100,7 @@ class GeofenceService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        GeofenceDebugLog.d(this, "service destroyed")
         try {
             LocationServices.getFusedLocationProviderClient(this)
                 .removeLocationUpdates(callback)
