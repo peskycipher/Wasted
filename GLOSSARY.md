@@ -27,6 +27,4 @@ One device location sample. Fixes with accuracy worse than 25 m are discarded: t
 
 **Station dataset**:
 The build-time bundled snapshot of all Australian policing facilities (Geoscience Australia, CC BY 4.0). Only operational facilities are fenced.
-## Wallet
-
 

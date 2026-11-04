@@ -33,7 +33,6 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
         private const val TRIGGER_GEOFENCE_DWELL = "trigger_geofence_dwell"
         private const val TRIGGER_GEOFENCE_SINCE = "trigger_geofence_since"
 
-
         private const val FILE_NAME = "sec_shared_prefs"
 
         // migration
@@ -170,7 +169,6 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
     var triggerGeofenceSince: Long
         get() = prefs.getLong(TRIGGER_GEOFENCE_SINCE, 0L)
         set(value) = prefs.edit { putLong(TRIGGER_GEOFENCE_SINCE, value) }
-
 
 
     fun setTrigger(trigger: Trigger, on: Boolean) {

@@ -17,8 +17,8 @@ checkout is an unauthorized payment surface from this app).
 
 The store front is branded **CipherCell** and the payment rail is the
 operator-owned BTCPay Server (Bitcoin, Lightning, and the Monero plugin —
-currency `XMR`). Customer payments collected in the app are invoices on that
-server; the wallet balance derives from them (ADR 0003 unchanged).
+currency `XMR`). Customer payments collected in the app were invoices on that
+server; the wallet balance derived from them (feature removed — see Status).
 
 Two binding rules:
 
