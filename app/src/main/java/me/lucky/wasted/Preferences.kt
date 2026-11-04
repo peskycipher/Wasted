@@ -13,6 +13,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
     companion object {
         private const val DEFAULT_TRIGGER_LOCK_COUNT = 7 * 24 * 60
         private const val DEFAULT_TRIGGER_TILE_DELAY = 2000L
+        private const val DEFAULT_TRIGGER_GEOFENCE_DWELL = 1
 
         private const val ENABLED = "enabled"
         private const val SECRET = "secret"
@@ -29,6 +30,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
         private const val TRIGGER_LOCK_COUNT = "trigger_lock_count"
         private const val TRIGGER_TILE_DELAY = "trigger_tile_delay"
         private const val TRIGGER_APPLICATION_OPTIONS = "trigger_application_options"
+        private const val TRIGGER_GEOFENCE_DWELL = "trigger_geofence_dwell"
         private const val TRIGGER_GEOFENCE_SINCE = "trigger_geofence_since"
 
         private const val FILE_NAME = "sec_shared_prefs"
@@ -157,6 +159,11 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
     var triggerApplicationOptions: Int
         get() = prefs.getInt(TRIGGER_APPLICATION_OPTIONS, 0)
         set(value) = prefs.edit { putInt(TRIGGER_APPLICATION_OPTIONS, value) }
+
+    // police-station dwell minutes
+    var triggerGeofenceDwell: Int
+        get() = prefs.getInt(TRIGGER_GEOFENCE_DWELL, DEFAULT_TRIGGER_GEOFENCE_DWELL)
+        set(value) = prefs.edit { putInt(TRIGGER_GEOFENCE_DWELL, value) }
 
     // epoch ms when the current dwell started, 0 = not dwelling
     var triggerGeofenceSince: Long
