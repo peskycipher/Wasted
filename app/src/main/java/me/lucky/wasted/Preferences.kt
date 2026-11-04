@@ -42,7 +42,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) : me.lucky.wasted.wal
 
         // migration
         private const val AUTHENTICATION_CODE = "authentication_code"
-        private const val WIPE_ON_INACTIVITY_COUNT = "wipe_on_inactivation_count"
+        private const val WIPE_ON_INACTIVITY_COUNT = "wipe_on_inactivity_count"
 
         // ADR 0002: the plaintext mirror exists to serve direct-boot consumers
         // pre-unlock — it carries exactly these keys and nothing else. Adding a

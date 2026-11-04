@@ -38,12 +38,16 @@ class ForegroundService : Service() {
         updateReceivers(null)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        deinit()
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         // manifest UsbReceiver owns USB events outright (USB_STATE cannot be
         // manifest-delivered, while DEVICE/ACCESSORY_ATTACHED can and fire
         // regardless of this service — a second receiver here only double-fires)
-        val register = receiverSet(intent)
         startForeground(
             NOTIFICATION_ID,
             NotificationCompat.Builder(this, NotificationManager.CHANNEL_DEFAULT_ID)
