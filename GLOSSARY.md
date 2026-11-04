@@ -29,17 +29,4 @@ One device location sample. Fixes with accuracy worse than 25 m are discarded: t
 The build-time bundled snapshot of all Australian policing facilities (Geoscience Australia, CC BY 4.0). Only operational facilities are fenced.
 ## Wallet
 
-**Wallet**:
-The Wasted-side top-up ledger: local balance in minor units of the balance
-currency, plus a capped invoice history, funded exclusively through the
-operator-owned BTCPay Server (Greenfield). _Avoid_: eSIM wallet, Pikasim wallet
 
-**Top-up**:
-A BTCPay invoice created from the Wallet screen; settled once into the balance
-(invoice currency must match the balance currency). _Avoid_: recharge, deposit
-
-**CipherCell storefront**:
-The customer-facing payment brand for in-app purchases; payments are invoices
-on the operator-owned BTCPay Server (bitcoin, lightning, Monero = XMR).
-Purchases fulfilled by a third party must name that supplier at checkout.
-_Avoid_: white-label checkout, unattributed fulfilment

@@ -141,8 +141,6 @@ open class MainActivity : AppCompatActivity() {
         R.id.nav_trigger_application -> ApplicationFragment()
         R.id.nav_locations -> LocationsFragment()
         R.id.nav_recast -> RecastFragment()
-        R.id.nav_wallet -> WalletFragment()
-        R.id.nav_settings -> AccountSettingsFragment()
         else -> MainFragment()
     }
 

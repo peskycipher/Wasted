@@ -19,11 +19,6 @@ class NotificationManager(private val ctx: Context) {
 
     // "app notifications" toggle in the account settings screen: off recreates
     // the channel at blocked importance, on restores it
-    fun setNotificationsEnabled(enabled: Boolean) {
-        manager.deleteNotificationChannel(CHANNEL_DEFAULT_ID)
-        manager.createNotificationChannel(appChannel(enabled))
-    }
-
     private fun appChannel(enabled: Boolean = true) = NotificationChannelCompat.Builder(
         CHANNEL_DEFAULT_ID,
         if (enabled) NotificationManagerCompat.IMPORTANCE_LOW

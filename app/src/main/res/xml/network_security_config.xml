@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- onion services are HTTP-only; allow cleartext solely for .onion hosts -->
-<network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">onion</domain>
-    </domain-config>
-</network-security-config>

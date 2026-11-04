@@ -7,14 +7,6 @@ android {
     namespace 'me.lucky.wasted'
     compileSdk 34
 
-    def btcpayUrl = (project.findProperty("BTCPAY_URL") ?: "") as String
-    def btcpayStoreId = (project.findProperty("BTCPAY_STORE_ID") ?: "") as String
-    def btcpayApiKey = (project.findProperty("BTCPAY_API_KEY") ?: "") as String
-    // .onion URLs are only reachable through Tor: route SOCKS via Orbot's
-    // local port; override with -PBTCPAY_VIA_TOR=false on a Tor-VPN device
-    def btcpayViaTor = (project.findProperty("BTCPAY_VIA_TOR")
-        ?: btcpayUrl.endsWith(".onion").toString()) as String
-
     def ksFile = rootProject.file('release.keystore')
     signingConfigs {
         release {
@@ -34,10 +26,6 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "BTCPAY_URL", "\"${btcpayUrl}\""
-        buildConfigField "String", "BTCPAY_STORE_ID", "\"${btcpayStoreId}\""
-        buildConfigField "String", "BTCPAY_API_KEY", "\"${btcpayApiKey}\""
-        buildConfigField "boolean", "BTCPAY_VIA_TOR", btcpayViaTor
     }
 
     buildTypes {

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (2026-11-04)
+Accepted (2026-11-04) — **Removed 2026-11-04**: the wallet, settings screens and store doorway feature set was reverted from the app by operator decision. This ADR records why the feature set must not be re-added without its own decision; the boundary rules (never call pikasim.com's API; supplier access contractual; fulfilment disclosure) remain binding for any future storefront.
 
 ## Context
 

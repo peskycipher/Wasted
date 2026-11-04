@@ -9,7 +9,7 @@ import androidx.preference.PreferenceManager
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 
-class Preferences(ctx: Context, encrypted: Boolean = true) : me.lucky.wasted.wallet.WalletStore {
+class Preferences(ctx: Context, encrypted: Boolean = true) {
     companion object {
         private const val DEFAULT_TRIGGER_LOCK_COUNT = 7 * 24 * 60
         private const val DEFAULT_TRIGGER_TILE_DELAY = 2000L
@@ -33,10 +33,6 @@ class Preferences(ctx: Context, encrypted: Boolean = true) : me.lucky.wasted.wal
         private const val TRIGGER_GEOFENCE_DWELL = "trigger_geofence_dwell"
         private const val TRIGGER_GEOFENCE_SINCE = "trigger_geofence_since"
 
-        private const val WALLET_TOPUP_CURRENCY = "wallet_topup_currency"
-        private const val WALLET_INVOICES = "wallet_invoices"
-        private const val LANGUAGE_TAG = "language_tag"
-        private const val APP_NOTIFICATIONS = "app_notifications"
 
         private const val FILE_NAME = "sec_shared_prefs"
 
@@ -175,24 +171,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) : me.lucky.wasted.wal
         get() = prefs.getLong(TRIGGER_GEOFENCE_SINCE, 0L)
         set(value) = prefs.edit { putLong(TRIGGER_GEOFENCE_SINCE, value) }
 
-    // ---- wallet (ADR 0003): balance is derived from the ledger, never stored ----
-    // currency new top-up invoices are created in
-    override var walletTopupCurrency: String
-        get() = prefs.getString(WALLET_TOPUP_CURRENCY, "USD") ?: "USD"
-        set(value) = prefs.edit { putString(WALLET_TOPUP_CURRENCY, value) }
 
-    // serialized JSON array of wallet invoices (cap 25, newest first)
-    override var walletInvoices: String
-        get() = prefs.getString(WALLET_INVOICES, "") ?: ""
-        set(value) = prefs.edit { putString(WALLET_INVOICES, value) }
-
-    var languageTag: String
-        get() = prefs.getString(LANGUAGE_TAG, "") ?: ""
-        set(value) = prefs.edit { putString(LANGUAGE_TAG, value) }
-
-    var isAppNotifications: Boolean
-        get() = prefs.getBoolean(APP_NOTIFICATIONS, true)
-        set(value) = prefs.edit { putBoolean(APP_NOTIFICATIONS, value) }
 
     fun setTrigger(trigger: Trigger, on: Boolean) {
         val cur = triggers
