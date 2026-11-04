@@ -30,12 +30,6 @@
     </group>
 
     <item
-        android:id="@+id/nav_store"
-        android:title="@string/store"
-        android:checkable="false"
-        android:icon="@android:drawable/ic_menu_sort_by_size" />
-
-    <item
         android:id="@+id/nav_locations"
         android:title="@string/locations"
         android:checkable="true" />

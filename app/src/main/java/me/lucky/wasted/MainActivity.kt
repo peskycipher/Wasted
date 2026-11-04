@@ -2,8 +2,6 @@ package me.lucky.wasted
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -107,17 +105,6 @@ open class MainActivity : AppCompatActivity() {
             }
         }
         navigation.setNavigationItemSelectedListener {
-            if (it.itemId == R.id.nav_store) {
-                // doorway to the public web storefront — no API is called
-                startActivity(
-                    Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse(STORE_URL),
-                    ),
-                )
-                drawer.close()
-                return@setNavigationItemSelectedListener true
-            }
             replaceFragment(getFragment(it.itemId))
             it.isChecked = true
             drawer.close()
