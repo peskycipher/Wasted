@@ -48,7 +48,7 @@ class GeofenceService : Service() {
                 loc.longitude,
                 loc.accuracy,
                 loc.time,
-                prefs.triggerGeofenceDwell,
+                DwellMachine.DWELL_MS.toInt() // minutes
             )) {
                 DwellEffect.Fired -> stopSelf()
                 else -> {}

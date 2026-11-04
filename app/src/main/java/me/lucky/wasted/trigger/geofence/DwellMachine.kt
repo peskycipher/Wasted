@@ -15,6 +15,10 @@ class DwellMachine(
         const val MAX_FIX_ACCURACY_M = 25f
         // fused-location fix cadence for the dweller
         const val FIX_INTERVAL_MS = 2 * 60 * 1000L
+        // dwell time is fixed and equals the fix cadence: entering a fence
+        // starts the timer, the next fix (>= 2 min later) confirms the fire.
+        // User-configurable dwell removed 2026-11-04 (ADR 0001 update)
+        const val DWELL_MS = FIX_INTERVAL_MS
         private const val EARTH_M = 6371000.0
         private const val DEG = Math.PI / 180.0
     }

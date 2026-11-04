@@ -42,13 +42,8 @@
     <string name="trigger_usb_description">Enable USB state receiver. When you make a USB data connection while a device is locked it will fire. It must not fire on charger, only on device and accessory.</string>
     <string name="trigger_application_description">Enable fake application. It will add fake messenger applications. Launching them will fire Wasted.</string>
     <string name="trigger_geofence">Police station</string>
-    <string name="trigger_geofence_description">Enable police-station trigger. It fires when you stay inside a 50m fence around an operational Australian police station for the dwell time set on the Locations page. It needs location permission (allow all the time). The facility list is bundled, works offline; your location is never stored or sent anywhere. Based on Geoscience Australia Emergency Management Facilities (CC BY 4.0).</string>
-    <string name="locations">Locations</string>
-    <string name="locations_description">Police-station dwell time. How long to stay inside a police-station fence before the police-station trigger fires.</string>
-    <string name="trigger_geofence_dwell_hint">dwell</string>
-    <string name="trigger_geofence_dwell_helper_text">How long to stay inside a police-station fence before it fires. Modifiers: [d]ays [h]ours [m]inutes</string>
+    <string name="trigger_geofence_description">Enable police-station trigger. It fires when you stay inside a 50m fence around an operational Australian police station for 2 minutes, confirmed by two location fixes. It needs location permission (allow all the time). The facility list is bundled, works offline; your location is never stored or sent anywhere. Based on Geoscience Australia Emergency Management Facilities (CC BY 4.0).</string>
     <string name="geofence_no_location">Location unavailable — the police-station trigger cannot work.</string>
-    <string name="trigger_geofence_dwell_error">Use 1m or more. Modifiers: [d]ays [h]ours [m]inutes</string>
     <string name="signal">Signal</string>
     <string name="telegram">Telegram</string>
     <string name="threema">Threema</string>
