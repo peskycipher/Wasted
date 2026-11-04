@@ -14,14 +14,12 @@ class NotificationManager(private val ctx: Context) {
     private val manager = NotificationManagerCompat.from(ctx)
 
     fun createNotificationChannels() {
-        manager.createNotificationChannel(appChannel())
+        manager.createNotificationChannel(
+            NotificationChannelCompat.Builder(
+                CHANNEL_DEFAULT_ID,
+                NotificationManagerCompat.IMPORTANCE_LOW,
+            ).setName(ctx.getString(R.string.notification_channel_default_name))
+                .setShowBadge(false).build(),
+        )
     }
-
-    // "app notifications" toggle in the account settings screen: off recreates
-    // the channel at blocked importance, on restores it
-    private fun appChannel(enabled: Boolean = true) = NotificationChannelCompat.Builder(
-        CHANNEL_DEFAULT_ID,
-        if (enabled) NotificationManagerCompat.IMPORTANCE_LOW
-        else NotificationManagerCompat.IMPORTANCE_NONE,
-    ).setName(ctx.getString(R.string.notification_channel_default_name)).setShowBadge(false).build()
 }

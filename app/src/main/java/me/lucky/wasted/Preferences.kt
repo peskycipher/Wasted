@@ -14,6 +14,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
         private const val DEFAULT_TRIGGER_LOCK_COUNT = 7 * 24 * 60
         private const val DEFAULT_TRIGGER_TILE_DELAY = 2000L
         private const val DEFAULT_TRIGGER_GEOFENCE_DWELL = 2
+        const val MIN_TRIGGER_GEOFENCE_DWELL = 2
 
         private const val ENABLED = "enabled"
         private const val SECRET = "secret"
@@ -169,7 +170,6 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
     var triggerGeofenceSince: Long
         get() = prefs.getLong(TRIGGER_GEOFENCE_SINCE, 0L)
         set(value) = prefs.edit { putLong(TRIGGER_GEOFENCE_SINCE, value) }
-
 
     fun setTrigger(trigger: Trigger, on: Boolean) {
         val cur = triggers

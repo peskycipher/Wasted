@@ -32,8 +32,9 @@ Two binding rules:
 
 ## Consequences
 
-- `wallet/Money` supports XMR (piconero minor units) so customers can pay in
-  Monero through the operator's BTCPay checkout.
+- `wallet/Money` supported XMR (piconero minor units) so customers could pay
+  in Monero through the operator's BTCPay checkout (code removed with the
+  feature set).
 - Until a supplier agreement exists, the app sells nothing — wallet is
   top-up + history only (ADR 0003 consequence unchanged).
 - The rejected design (XMR collection + unnamed forwarding + concealed

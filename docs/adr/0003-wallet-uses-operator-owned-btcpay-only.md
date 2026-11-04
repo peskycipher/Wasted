@@ -18,8 +18,9 @@ The in-app wallet only ever talks to **the operator's own BTCPay Server** via
 the Greenfield API, configured at build time through uncommitted Gradle
 properties `BTCPAY_URL`, `BTCPAY_STORE_ID`, `BTCPAY_API_KEY` (empty defaults,
 `BuildConfig` fields). `me.lucky.wasted.btcpay.BtcpayClient` is the only
-network caller for payments. The `eSIM Store` navigation item is a doorway to
-the public web pages (browser intent), not an API client.
+network caller for payments. The `eSIM Store` navigation item was a doorway to
+the public web pages (browser intent), not an API client — removed 2026-11-04
+with the feature set; the boundary rules below remain binding.
 
 Balance is a local one-way ledger: settled invoices in the balance currency
 sum into it (settle-once, in `wallet.WalletLedger`); foreign-currency invoices
