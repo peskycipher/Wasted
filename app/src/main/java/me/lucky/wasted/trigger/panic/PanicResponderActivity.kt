@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import info.guardianproject.panic.Panic
 import info.guardianproject.panic.PanicResponder
 import me.lucky.wasted.Trigger
-import me.lucky.wasted.Utils
+import me.lucky.wasted.fire.Fire
 
 class PanicResponderActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,7 +15,7 @@ class PanicResponderActivity : AppCompatActivity() {
             finishAndRemoveTask()
             return
         }
-        Utils(this).fire(
+        Fire(this).fire(
             Trigger.PANIC_KIT,
             PanicResponder.receivedTriggerFromConnectedApp(this),
         )

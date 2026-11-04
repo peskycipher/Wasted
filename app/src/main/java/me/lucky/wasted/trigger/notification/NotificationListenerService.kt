@@ -7,11 +7,11 @@ import android.service.notification.StatusBarNotification
 
 import me.lucky.wasted.Preferences
 import me.lucky.wasted.Trigger
-import me.lucky.wasted.Utils
+import me.lucky.wasted.fire.Fire
 
 class NotificationListenerService : NotificationListenerService() {
     private lateinit var prefs: Preferences
-    private lateinit var utils: Utils
+    private lateinit var fire: Fire
 
     override fun onCreate() {
         super.onCreate()
@@ -20,7 +20,7 @@ class NotificationListenerService : NotificationListenerService() {
 
     private fun init() {
         prefs = Preferences.new(this)
-        utils = Utils(this)
+        fire = Fire(this)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -28,9 +28,11 @@ class NotificationListenerService : NotificationListenerService() {
         if (sbn == null) return
         val secret = prefs.secret
         assert(secret.isNotEmpty())
-        if (sbn.notification.extras[Notification.EXTRA_TEXT]?.toString()?.trim() != secret) return
+        if (sbn.notification.extras
+                .getCharSequence(Notification.EXTRA_TEXT)?.toString()?.trim() != secret
+        ) return
         cancelAllNotifications()
-        utils.fire(Trigger.NOTIFICATION)
+        fire.fire(Trigger.NOTIFICATION)
     }
 
     override fun onListenerConnected() {

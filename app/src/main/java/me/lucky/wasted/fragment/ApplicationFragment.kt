@@ -1,7 +1,6 @@
 package me.lucky.wasted.fragment
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,18 +10,15 @@ import androidx.fragment.app.Fragment
 import me.lucky.wasted.ApplicationOption
 import me.lucky.wasted.Preferences
 import me.lucky.wasted.Utils
+import me.lucky.wasted.reconciler.TriggerReconciler
 import me.lucky.wasted.databinding.FragmentApplicationBinding
 
 class ApplicationFragment : Fragment() {
     private lateinit var binding: FragmentApplicationBinding
     private lateinit var ctx: Context
     private lateinit var prefs: Preferences
-    private lateinit var prefsdb: Preferences
-    private val utils by lazy { Utils(ctx) }
+    private val reconciler by lazy { TriggerReconciler(ctx) }
 
-    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        prefs.copyTo(prefsdb, key)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,20 +31,11 @@ class ApplicationFragment : Fragment() {
         return binding.root
     }
 
-    override fun onStart() {
-        super.onStart()
-        prefs.registerListener(prefsListener)
-    }
 
-    override fun onStop() {
-        super.onStop()
-        prefs.unregisterListener(prefsListener)
-    }
 
     private fun init() {
         ctx = requireContext()
         prefs = Preferences(ctx)
-        prefsdb = Preferences(ctx, encrypted = false)
         binding.apply {
             val options = prefs.triggerApplicationOptions
             signal.isChecked = options.and(ApplicationOption.SIGNAL.value) != 0
@@ -60,36 +47,20 @@ class ApplicationFragment : Fragment() {
 
     private fun setup() = binding.apply {
         signal.setOnCheckedChangeListener { _, isChecked ->
-            prefs.triggerApplicationOptions = Utils.setFlag(
-                prefs.triggerApplicationOptions,
-                ApplicationOption.SIGNAL.value,
-                isChecked,
-            )
-            utils.updateApplicationEnabled()
+            prefs.setApplicationOption(ApplicationOption.SIGNAL, isChecked)
+            reconciler.sync()
         }
         telegram.setOnCheckedChangeListener { _, isChecked ->
-            prefs.triggerApplicationOptions = Utils.setFlag(
-                prefs.triggerApplicationOptions,
-                ApplicationOption.TELEGRAM.value,
-                isChecked,
-            )
-            utils.updateApplicationEnabled()
+            prefs.setApplicationOption(ApplicationOption.TELEGRAM, isChecked)
+            reconciler.sync()
         }
         threema.setOnCheckedChangeListener { _, isChecked ->
-            prefs.triggerApplicationOptions = Utils.setFlag(
-                prefs.triggerApplicationOptions,
-                ApplicationOption.THREEMA.value,
-                isChecked,
-            )
-            utils.updateApplicationEnabled()
+            prefs.setApplicationOption(ApplicationOption.THREEMA, isChecked)
+            reconciler.sync()
         }
         session.setOnCheckedChangeListener { _, isChecked ->
-            prefs.triggerApplicationOptions = Utils.setFlag(
-                prefs.triggerApplicationOptions,
-                ApplicationOption.SESSION.value,
-                isChecked,
-            )
-            utils.updateApplicationEnabled()
+            prefs.setApplicationOption(ApplicationOption.SESSION, isChecked)
+            reconciler.sync()
         }
     }
 }

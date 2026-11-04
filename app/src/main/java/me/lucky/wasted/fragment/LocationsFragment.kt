@@ -1,7 +1,6 @@
 package me.lucky.wasted.fragment
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,11 +16,7 @@ class LocationsFragment : Fragment() {
     private lateinit var binding: FragmentLocationsBinding
     private lateinit var ctx: Context
     private lateinit var prefs: Preferences
-    private lateinit var prefsdb: Preferences
 
-    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        prefs.copyTo(prefsdb, key)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,20 +29,11 @@ class LocationsFragment : Fragment() {
         return binding.root
     }
 
-    override fun onStart() {
-        super.onStart()
-        prefs.registerListener(prefsListener)
-    }
 
-    override fun onStop() {
-        super.onStop()
-        prefs.unregisterListener(prefsListener)
-    }
 
     private fun init() {
         ctx = requireContext()
         prefs = Preferences(ctx)
-        prefsdb = Preferences(ctx, encrypted = false)
         binding.apply {
             val dwell = prefs.triggerGeofenceDwell
             geofenceDwell.editText?.setText(if (dwell % 60 == 0) "${dwell / 60}h" else "${dwell}m")

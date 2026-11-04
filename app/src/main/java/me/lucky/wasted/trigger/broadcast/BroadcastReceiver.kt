@@ -6,7 +6,7 @@ import android.content.Intent
 
 import me.lucky.wasted.Preferences
 import me.lucky.wasted.Trigger
-import me.lucky.wasted.Utils
+import me.lucky.wasted.fire.Fire
 
 class BroadcastReceiver : BroadcastReceiver() {
     companion object {
@@ -18,7 +18,7 @@ class BroadcastReceiver : BroadcastReceiver() {
             val secret = Preferences.new(context).secret
             assert(secret.isNotEmpty())
             if (intent.getStringExtra(KEY)?.trim() != secret) return
-            Utils(context).fire(trigger)
+            Fire(context).fire(trigger)
         }
     }
 

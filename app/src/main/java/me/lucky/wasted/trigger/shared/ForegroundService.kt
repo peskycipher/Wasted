@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import me.lucky.wasted.Preferences
 import me.lucky.wasted.R
 import me.lucky.wasted.Trigger
+import me.lucky.wasted.fire.Fire
 import me.lucky.wasted.Utils
 import me.lucky.wasted.trigger.airplane.AirplaneReceiver
 import me.lucky.wasted.trigger.lock.LockJobManager
@@ -55,7 +56,7 @@ class ForegroundService : Service() {
                 IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED),
             )
             // catch airplane mode turned on while the service was dead
-            if (AirplaneReceiver.isOn(this)) Utils(this).fire(Trigger.AIRPLANE_MODE)
+            if (AirplaneReceiver.isOn(this)) Fire(this).fire(Trigger.AIRPLANE_MODE)
         }
     }
 
@@ -124,11 +125,10 @@ class ForegroundService : Service() {
 
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action != ACTION_USB_STATE) return
-            val utils = Utils(context ?: return)
-            if (!utils.isDeviceLocked()) return
+            if (!Utils(context ?: return).isDeviceLocked()) return
             val extras = intent.extras ?: return
             if (!extras.getBoolean(KEY_1) && !extras.getBoolean(KEY_2)) return
-            utils.fire(Trigger.USB)
+            Fire(context).fire(Trigger.USB)
         }
     }
 }

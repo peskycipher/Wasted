@@ -6,7 +6,7 @@ import android.content.Intent
 import android.provider.Settings
 
 import me.lucky.wasted.Trigger
-import me.lucky.wasted.Utils
+import me.lucky.wasted.fire.Fire
 
 class AirplaneReceiver : BroadcastReceiver() {
     companion object {
@@ -21,6 +21,6 @@ class AirplaneReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action != Intent.ACTION_AIRPLANE_MODE_CHANGED) return
         if (!intent.getBooleanExtra("state", false)) return
-        Utils(context ?: return).fire(Trigger.AIRPLANE_MODE)
+        Fire(context ?: return).fire(Trigger.AIRPLANE_MODE)
     }
 }

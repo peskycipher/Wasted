@@ -1,7 +1,6 @@
 package me.lucky.wasted.fragment
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,13 +23,9 @@ class LockFragment : Fragment() {
     private lateinit var binding: FragmentLockBinding
     private lateinit var ctx: Context
     private lateinit var prefs: Preferences
-    private lateinit var prefsdb: Preferences
     private val lockCountPattern by lazy {
         Pattern.compile("^[1-9]\\d*[$MODIFIER_DAYS$MODIFIER_HOURS$MODIFIER_MINUTES]$") }
 
-    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        prefs.copyTo(prefsdb, key)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,20 +38,11 @@ class LockFragment : Fragment() {
         return binding.root
     }
 
-    override fun onStart() {
-        super.onStart()
-        prefs.registerListener(prefsListener)
-    }
 
-    override fun onStop() {
-        super.onStop()
-        prefs.unregisterListener(prefsListener)
-    }
 
     private fun init() {
         ctx = requireContext()
         prefs = Preferences(ctx)
-        prefsdb = Preferences(ctx, encrypted = false)
         binding.apply {
             val count = prefs.triggerLockCount
             time.editText?.setText(when {

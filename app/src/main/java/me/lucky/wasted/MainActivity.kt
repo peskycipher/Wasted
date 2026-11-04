@@ -2,7 +2,8 @@ package me.lucky.wasted
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.SharedPreferences
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -22,12 +23,7 @@ import me.lucky.wasted.trigger.shared.NotificationManager
 open class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: Preferences
-    private lateinit var prefsdb: Preferences
     private val clipboardManager by lazy { getSystemService(ClipboardManager::class.java) }
-
-    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        prefs.copyTo(prefsdb, key)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,8 +37,6 @@ open class MainActivity : AppCompatActivity() {
 
     private fun init1() {
         prefs = Preferences(this)
-        prefsdb = Preferences(this, encrypted = false)
-        prefs.copyTo(prefsdb)
     }
 
     private fun init2() {
@@ -87,16 +81,6 @@ open class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onStart() {
-        super.onStart()
-        prefs.registerListener(prefsListener)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        prefs.unregisterListener(prefsListener)
-    }
-
     private fun setup() = binding.apply {
         appBar.setNavigationOnClickListener {
             drawer.open()
@@ -123,6 +107,17 @@ open class MainActivity : AppCompatActivity() {
             }
         }
         navigation.setNavigationItemSelectedListener {
+            if (it.itemId == R.id.nav_store) {
+                // doorway to the public web storefront — no API is called
+                startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(STORE_URL),
+                    ),
+                )
+                drawer.close()
+                return@setNavigationItemSelectedListener true
+            }
             replaceFragment(getFragment(it.itemId))
             it.isChecked = true
             drawer.close()
@@ -138,7 +133,7 @@ open class MainActivity : AppCompatActivity() {
             .commit()
     }
 
-    private fun getFragment(id: Int) = when (id) {
+    private fun getFragment(id: Int): Fragment = when (id) {
         R.id.nav_main -> MainFragment()
         R.id.nav_trigger_tile -> TileFragment()
         R.id.nav_trigger_notification -> NotificationFragment()
@@ -146,6 +141,8 @@ open class MainActivity : AppCompatActivity() {
         R.id.nav_trigger_application -> ApplicationFragment()
         R.id.nav_locations -> LocationsFragment()
         R.id.nav_recast -> RecastFragment()
+        R.id.nav_wallet -> WalletFragment()
+        R.id.nav_settings -> AccountSettingsFragment()
         else -> MainFragment()
     }
 

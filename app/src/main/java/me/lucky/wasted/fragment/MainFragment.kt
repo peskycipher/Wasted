@@ -2,7 +2,6 @@ package me.lucky.wasted.fragment
 
 import android.app.Activity
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,20 +12,18 @@ import java.util.*
 
 import me.lucky.wasted.Preferences
 import me.lucky.wasted.R
-import me.lucky.wasted.Utils
 import me.lucky.wasted.admin.DeviceAdminManager
 import me.lucky.wasted.databinding.FragmentMainBinding
+import me.lucky.wasted.permission.LocationPermission
+import me.lucky.wasted.reconciler.TriggerReconciler
 
 class MainFragment : Fragment() {
     private lateinit var binding: FragmentMainBinding
     private lateinit var ctx: Context
     private lateinit var prefs: Preferences
-    private lateinit var prefsdb: Preferences
     private val admin by lazy { DeviceAdminManager(ctx) }
+    private val locPermission = LocationPermission(this)
 
-    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        prefs.copyTo(prefsdb, key)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,20 +36,11 @@ class MainFragment : Fragment() {
         return binding.root
     }
 
-    override fun onStart() {
-        super.onStart()
-        prefs.registerListener(prefsListener)
-    }
 
-    override fun onStop() {
-        super.onStop()
-        prefs.unregisterListener(prefsListener)
-    }
 
     private fun init() {
         ctx = requireContext()
         prefs = Preferences(ctx)
-        prefsdb = Preferences(ctx, encrypted = false)
         if (prefs.secret.isEmpty()) prefs.secret = makeSecret()
         binding.apply {
             secret.text = prefs.secret
@@ -81,13 +69,15 @@ class MainFragment : Fragment() {
 
     private fun setOn() {
         prefs.isEnabled = true
-        Utils(ctx).setEnabled(true)
+        TriggerReconciler(ctx).sync()
+        // settle location early so the police-station trigger is usable
+        locPermission.ensure {}
         binding.toggle.isChecked = true
     }
 
     private fun setOff() {
         prefs.isEnabled = false
-        Utils(ctx).setEnabled(false)
+        TriggerReconciler(ctx).sync()
         try { admin.remove() } catch (exc: SecurityException) {}
         binding.toggle.isChecked = false
     }

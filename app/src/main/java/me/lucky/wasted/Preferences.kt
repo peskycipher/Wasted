@@ -9,7 +9,7 @@ import androidx.preference.PreferenceManager
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 
-class Preferences(ctx: Context, encrypted: Boolean = true) {
+class Preferences(ctx: Context, encrypted: Boolean = true) : me.lucky.wasted.wallet.WalletStore {
     companion object {
         private const val DEFAULT_TRIGGER_LOCK_COUNT = 7 * 24 * 60
         private const val DEFAULT_TRIGGER_TILE_DELAY = 2000L
@@ -32,6 +32,11 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
         private const val TRIGGER_APPLICATION_OPTIONS = "trigger_application_options"
         private const val TRIGGER_GEOFENCE_DWELL = "trigger_geofence_dwell"
         private const val TRIGGER_GEOFENCE_SINCE = "trigger_geofence_since"
+
+        private const val WALLET_TOPUP_CURRENCY = "wallet_topup_currency"
+        private const val WALLET_INVOICES = "wallet_invoices"
+        private const val LANGUAGE_TAG = "language_tag"
+        private const val APP_NOTIFICATIONS = "app_notifications"
 
         private const val FILE_NAME = "sec_shared_prefs"
 
@@ -59,6 +64,54 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
         val context = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
             ctx.createDeviceProtectedStorageContext() else ctx
         PreferenceManager.getDefaultSharedPreferences(context)
+    }
+
+    // direct-boot mirror: the device-protected plaintext copy that
+    // directBootAware trigger components (broadcast, usb, lock) read pre-unlock,
+    // when the credential-encrypted file is unreadable — see docs/adr/0002.
+    // API < 24 has no direct boot: legacy storage, no mirror
+    private val mirror: SharedPreferences? =
+        if (encrypted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) PreferenceManager
+            .getDefaultSharedPreferences(ctx.createDeviceProtectedStorageContext())
+        else null
+
+    // SharedPreferences keeps listeners weakly — hold a strong reference
+    private val mirrorListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { sp, key ->
+            if (mirror != null && key != null) copyKey(sp, mirror, key)
+        }
+
+    init {
+        if (mirror != null)
+            prefs.registerOnSharedPreferenceChangeListener(mirrorListener)
+        // one-time bootstrap: the listener mirrors writes only, so keys stored
+        // before this version (incl. secret) must be copied wholesale once —
+        // direct-boot consumers read the mirror pre-unlock (ADR 0002)
+        if (mirror != null) {
+            for (k in prefs.all.keys) {
+                if (!mirror.all.containsKey(k))
+                    copyKey(prefs, mirror, k)
+            }
+        }
+    }
+
+    // mirror the single changed key; anything with an unsupported type is dropped
+    private fun copyKey(src: SharedPreferences, dst: SharedPreferences, key: String) {
+        val v = src.all[key] ?: return
+        dst.edit {
+            when (v) {
+                is Boolean -> putBoolean(key, v)
+                is Int -> putInt(key, v)
+                is Long -> putLong(key, v)
+                is String -> putString(key, v)
+                // a silently dropped type would break direct-boot reads later;
+                // make any new pref type visible immediately
+                else -> android.util.Log.w(
+                    "Preferences",
+                    "mirror: unsupported pref type for $key (${v::class.simpleName})",
+                )
+            }
+        }
     }
 
     var isEnabled: Boolean
@@ -109,6 +162,36 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
         get() = prefs.getLong(TRIGGER_GEOFENCE_SINCE, 0L)
         set(value) = prefs.edit { putLong(TRIGGER_GEOFENCE_SINCE, value) }
 
+    // ---- wallet (ADR 0003): balance is derived from the ledger, never stored ----
+    // currency new top-up invoices are created in
+    override var walletTopupCurrency: String
+        get() = prefs.getString(WALLET_TOPUP_CURRENCY, "USD") ?: "USD"
+        set(value) = prefs.edit { putString(WALLET_TOPUP_CURRENCY, value) }
+
+    // serialized JSON array of wallet invoices (cap 25, newest first)
+    override var walletInvoices: String
+        get() = prefs.getString(WALLET_INVOICES, "") ?: ""
+        set(value) = prefs.edit { putString(WALLET_INVOICES, value) }
+
+    var languageTag: String
+        get() = prefs.getString(LANGUAGE_TAG, "") ?: ""
+        set(value) = prefs.edit { putString(LANGUAGE_TAG, value) }
+
+    var isAppNotifications: Boolean
+        get() = prefs.getBoolean(APP_NOTIFICATIONS, true)
+        set(value) = prefs.edit { putBoolean(APP_NOTIFICATIONS, value) }
+
+    fun setTrigger(trigger: Trigger, on: Boolean) {
+        val cur = triggers
+        triggers = if (on) cur.or(trigger.value) else cur.and(trigger.value.inv())
+    }
+
+    fun setApplicationOption(option: ApplicationOption, on: Boolean) {
+        val cur = triggerApplicationOptions
+        triggerApplicationOptions =
+            if (on) cur.or(option.value) else cur.and(option.value.inv())
+    }
+
     var isRecastEnabled: Boolean
         get() = prefs.getBoolean(RECAST_ENABLED, false)
         set(value) = prefs.edit { putBoolean(RECAST_ENABLED, value) }
@@ -129,25 +212,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) {
         get() = prefs.getString(RECAST_EXTRA_VALUE, "") ?: ""
         set(value) = prefs.edit { putString(RECAST_EXTRA_VALUE, value) }
 
-    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) =
-        prefs.registerOnSharedPreferenceChangeListener(listener)
-
-    fun unregisterListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) =
-        prefs.unregisterOnSharedPreferenceChangeListener(listener)
-
-    fun copyTo(dst: Preferences, key: String? = null) = dst.prefs.edit {
-        for (entry in prefs.all.entries) {
-            val k = entry.key
-            if (key != null && k != key) continue
-            val v = entry.value ?: continue
-            when (v) {
-                is Boolean -> putBoolean(k, v)
-                is Int -> putInt(k, v)
-                is Long -> putLong(k, v)
-                is String -> putString(k, v)
-            }
-        }
-    }
+  // no external mirroring choreography — Preferences owns the direct-boot mirror
 }
 
 enum class Trigger(val value: Int) {

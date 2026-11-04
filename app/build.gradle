@@ -4,7 +4,26 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    namespace 'me.lucky.wasted'
+    compileSdk 34
+
+    def btcpayUrl = (project.findProperty("BTCPAY_URL") ?: "") as String
+    def btcpayStoreId = (project.findProperty("BTCPAY_STORE_ID") ?: "") as String
+    def btcpayApiKey = (project.findProperty("BTCPAY_API_KEY") ?: "") as String
+    // .onion URLs are only reachable through Tor: route SOCKS via Orbot's
+    // local port; override with -PBTCPAY_VIA_TOR=false on a Tor-VPN device
+    def btcpayViaTor = (project.findProperty("BTCPAY_VIA_TOR")
+        ?: btcpayUrl.endsWith(".onion").toString()) as String
+
+    def ksFile = rootProject.file('release.keystore')
+    signingConfigs {
+        release {
+            storeFile ksFile
+            storePassword findProperty('KEYSTORE_PASSWORD') ?: 'wasted-release'
+            keyAlias findProperty('KEY_ALIAS') ?: 'wasted'
+            keyPassword findProperty('KEY_PASSWORD') ?: 'wasted-release'
+        }
+    }
 
     defaultConfig {
         applicationId "me.lucky.wasted"
@@ -14,47 +33,54 @@ android {
         versionName "1.5.10"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "BTCPAY_URL", "\"${btcpayUrl}\""
+        buildConfigField "String", "BTCPAY_STORE_ID", "\"${btcpayStoreId}\""
+        buildConfigField "String", "BTCPAY_API_KEY", "\"${btcpayApiKey}\""
+        buildConfigField "boolean", "BTCPAY_VIA_TOR", btcpayViaTor
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig ksFile.exists() ? signingConfigs.release : null
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
     lint {
         disable 'MissingTranslation'
+        // TODO targetSdk 33/34/35 migration (POST_NOTIFICATIONS, FGS type,
+        // edge-to-edge) — tracked as the "bigger" modernization tier
+        disable 'ExpiredTargetSdkVersion'
     }
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.5.0'
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-
-    implementation 'androidx.security:security-crypto:1.0.0'
-    // https://issuetracker.google.com/issues/238425626
-    implementation('androidx.preference:preference-ktx:1.2.0') {
-        exclude group: 'androidx.lifecycle', module:'lifecycle-viewmodel'
-        exclude group: 'androidx.lifecycle', module:'lifecycle-viewmodel-ktx'
-    }
     implementation 'androidx.biometric:biometric:1.1.0'
-    implementation 'androidx.drawerlayout:drawerlayout:1.1.1'
+    implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
+    implementation 'androidx.security:security-crypto:1.0.0'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
     implementation 'info.guardianproject.panic:panic:1.0'
-    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'com.google.android.gms:play-services-location:21.3.0'
+    testImplementation 'junit:junit:4.13.2'
+    // org.json real implementation for JVM unit tests (android.jar stubs it)
+    testImplementation 'org.json:json:20240303'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }

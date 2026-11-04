@@ -13,6 +13,8 @@ class DwellMachine(
     companion object {
         const val FENCE_RADIUS_M = 50.0
         const val MAX_FIX_ACCURACY_M = 25f
+        // fused-location fix cadence for the dweller
+        const val FIX_INTERVAL_MS = 2 * 60 * 1000L
         private const val EARTH_M = 6371000.0
         private const val DEG = Math.PI / 180.0
     }

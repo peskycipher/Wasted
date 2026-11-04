@@ -13,21 +13,27 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationAvailability
+import com.google.android.gms.location.Priority
 
 import me.lucky.wasted.Preferences
 import me.lucky.wasted.R
 import me.lucky.wasted.Trigger
-import me.lucky.wasted.Utils
+import me.lucky.wasted.fire.Fire
 import me.lucky.wasted.trigger.shared.NotificationManager
 
 class GeofenceService : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1001
-        private const val FIX_INTERVAL_MS = 2 * 60 * 1000L
     }
 
     private lateinit var prefs: Preferences
-    private lateinit var machine: DwellMachine
+    private lateinit var controller: DwellController
+
+    private val prefState = object : DwellState {
+        override var sinceMs: Long
+            get() = prefs.triggerGeofenceSince
+            set(value) { prefs.triggerGeofenceSince = value }
+    }
 
     private val callback = object : LocationCallback() {
         override fun onLocationAvailability(availability: LocationAvailability) {
@@ -37,20 +43,15 @@ class GeofenceService : Service() {
         override fun onLocationResult(result: LocationResult) {
             showNotification(unavailable = false)
             val loc = result.lastLocation ?: return
-            when (machine.onFix(
+            when (controller.onFix(
                 loc.latitude,
                 loc.longitude,
                 loc.accuracy,
                 loc.time,
-                prefs.triggerGeofenceDwell * 60_000L,
+                prefs.triggerGeofenceDwell,
             )) {
-                DwellMachine.Outcome.FIRED -> {
-                    prefs.triggerGeofenceSince = 0
-                    Utils(this@GeofenceService).fire(Trigger.GEOFENCE)
-                    stopSelf()
-                }
-                DwellMachine.Outcome.NONE ->
-                    prefs.triggerGeofenceSince = machine.sinceMs ?: 0
+                DwellEffect.Fired -> stopSelf()
+                else -> {}
             }
         }
     }
@@ -58,17 +59,21 @@ class GeofenceService : Service() {
     override fun onCreate() {
         super.onCreate()
         prefs = Preferences(this)
-        machine = DwellMachine(StationStore(this).get())
-        machine.restore(prefs.triggerGeofenceSince)
+        controller = DwellController(
+            DwellMachine(StationStore(this).get()),
+            prefState,
+            fire = { Fire(this).fire(Trigger.GEOFENCE) },
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         startForegroundCompat()
         val client = LocationServices.getFusedLocationProviderClient(this)
-        val request = LocationRequest.create()
-            .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
-            .setInterval(FIX_INTERVAL_MS)
+        val request = LocationRequest.Builder(
+            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+            DwellMachine.FIX_INTERVAL_MS,
+        ).build()
         try {
             client.requestLocationUpdates(request, callback, Looper.getMainLooper())
         } catch (exc: SecurityException) {
