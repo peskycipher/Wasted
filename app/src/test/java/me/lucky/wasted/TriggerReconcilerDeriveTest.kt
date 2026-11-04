@@ -76,6 +76,20 @@ class TriggerReconcilerDeriveTest {
     }
 
     @Test
+    fun `usb only does not need the foreground service (ADR 0005)`() {
+        val d = derive(
+            enabled = true,
+            triggers = Trigger.USB.value,
+            options = 0,
+            fineLocationGranted = false,
+            tileSupported = true,
+        )
+        assertFalse(d.foregroundRequired)
+        assertTrue(d.usbReceiver)
+        assertFalse(d.restartReceiver)
+    }
+
+    @Test
     fun `tile requested without tile support stays off`() {
         val d = derive(
             enabled = true,

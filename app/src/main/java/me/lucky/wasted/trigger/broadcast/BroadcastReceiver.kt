@@ -16,7 +16,6 @@ class BroadcastReceiver : BroadcastReceiver() {
         fun panic(context: Context, intent: Intent?, trigger: Trigger) {
             if (intent?.action != ACTION) return
             val secret = Preferences.new(context).secret
-            assert(secret.isNotEmpty())
             if (intent.getStringExtra(KEY)?.trim() != secret) return
             Fire(context).fire(trigger)
         }

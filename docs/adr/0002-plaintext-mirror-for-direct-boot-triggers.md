@@ -29,6 +29,12 @@ already provides the platform's threat model for pre-unlock operation
 
 ## Consequences
 
+Update (2026-11-04): later review found wallet keys (invoice history, top-up
+currency) being mirrored without any pre-unlock reader. The mirror is scoped
+to an explicit `DIRECT_BOOT_KEYS` allowlist in `Preferences` — it carries only
+what direct-boot consumers actually read, and the bootstrap follows the same
+list. New direct-boot consumers must add their key there (review-enforced).
+
 - Wipe works before first unlock with no network and no UI.
 - The secret exists in plaintext in app-private device-protected storage — an
   accepted trade, revisit only if direct-boot wiping is dropped.

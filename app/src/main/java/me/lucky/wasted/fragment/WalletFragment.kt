@@ -96,11 +96,6 @@ class WalletFragment : Fragment() {
         val history = binding.history
         history.removeAllViews()
         val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        val statusColor = mapOf(
-            WalletLedger.STATUS_SETTLED to Color.parseColor("#1b5e20"),
-            WalletLedger.STATUS_NEW to Color.parseColor("#b58a2e"),
-            WalletLedger.STATUS_EXPIRED to Color.parseColor("#b3261e"),
-        )
         flow.ledger().invoices.chunked(2).forEach { pair ->
             val row = LinearLayout(ctx).apply {
                 layoutParams = LinearLayout.LayoutParams(

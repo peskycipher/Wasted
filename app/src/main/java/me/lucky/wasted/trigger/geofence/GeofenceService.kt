@@ -58,7 +58,7 @@ class GeofenceService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        prefs = Preferences(this)
+        prefs = Preferences.new(this)
         controller = DwellController(
             DwellMachine(StationStore(this).get()),
             prefState,

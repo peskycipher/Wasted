@@ -15,7 +15,7 @@ class ShortcutManager(private val ctx: Context) {
         private const val SHORTCUT_ID = "panic"
     }
 
-    private val prefs by lazy { Preferences(ctx) }
+    private val prefs by lazy { Preferences.new(ctx) }
 
     fun push() =
         ShortcutManagerCompat.pushDynamicShortcut(

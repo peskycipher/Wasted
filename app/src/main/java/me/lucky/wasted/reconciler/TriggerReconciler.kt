@@ -53,7 +53,8 @@ internal data class DesiredState(
     val enabledTriggers: Set<Trigger>,
     // application options, gated by enablement of the APPLICATION trigger
     val applicationOptions: Int,
-    // LOCK | USB | AIRPLANE_MODE need the ForegroundService
+    // LOCK | AIRPLANE_MODE need the ForegroundService; USB fires via the
+    // manifest UsbReceiver alone (ADR 0005)
     val foregroundRequired: Boolean,
     val usbReceiver: Boolean,
     val restartReceiver: Boolean,
@@ -69,7 +70,7 @@ internal fun derive(
 ): DesiredState {
     fun bit(t: Trigger) = triggers.and(t.value) != 0
     fun on(t: Trigger) = enabled && bit(t)
-    val foregroundRequired = on(Trigger.LOCK) || on(Trigger.USB) || on(Trigger.AIRPLANE_MODE)
+    val foregroundRequired = on(Trigger.LOCK) || on(Trigger.AIRPLANE_MODE)
     return DesiredState(
         enabledTriggers = Trigger.values().filter { on(it) && (it != Trigger.TILE || tileSupported) }.toSet(),
         applicationOptions = if (on(Trigger.APPLICATION)) options else 0,

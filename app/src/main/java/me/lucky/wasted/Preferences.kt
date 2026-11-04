@@ -42,7 +42,19 @@ class Preferences(ctx: Context, encrypted: Boolean = true) : me.lucky.wasted.wal
 
         // migration
         private const val AUTHENTICATION_CODE = "authentication_code"
-        private const val WIPE_ON_INACTIVITY_COUNT = "wipe_on_inactivity_count"
+        private const val WIPE_ON_INACTIVITY_COUNT = "wipe_on_inactivation_count"
+
+        // ADR 0002: the plaintext mirror exists to serve direct-boot consumers
+        // pre-unlock — it carries exactly these keys and nothing else. Adding a
+        // direct-boot consumer? add its key here (review-enforced).
+        private val DIRECT_BOOT_KEYS = setOf(
+            ENABLED, SECRET, AUTHENTICATION_CODE,
+            WIPE_DATA, WIPE_EMBEDDED_SIM,
+            TRIGGERS,
+            RECAST_ENABLED, RECAST_ACTION, RECAST_RECEIVER,
+            RECAST_EXTRA_KEY, RECAST_EXTRA_VALUE,
+            TRIGGER_LOCK_COUNT, WIPE_ON_INACTIVITY_COUNT,
+        )
 
         fun new(ctx: Context) = Preferences(
             ctx,
@@ -89,7 +101,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) : me.lucky.wasted.wal
         // direct-boot consumers read the mirror pre-unlock (ADR 0002)
         if (mirror != null) {
             for (k in prefs.all.keys) {
-                if (!mirror.all.containsKey(k))
+                if (k in DIRECT_BOOT_KEYS && !mirror.all.containsKey(k))
                     copyKey(prefs, mirror, k)
             }
         }
@@ -97,6 +109,7 @@ class Preferences(ctx: Context, encrypted: Boolean = true) : me.lucky.wasted.wal
 
     // mirror the single changed key; anything with an unsupported type is dropped
     private fun copyKey(src: SharedPreferences, dst: SharedPreferences, key: String) {
+        if (key !in DIRECT_BOOT_KEYS) return // mirror scope == direct-boot readers
         val v = src.all[key] ?: return
         dst.edit {
             when (v) {

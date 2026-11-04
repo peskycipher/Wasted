@@ -27,7 +27,6 @@ class NotificationListenerService : NotificationListenerService() {
         super.onNotificationPosted(sbn)
         if (sbn == null) return
         val secret = prefs.secret
-        assert(secret.isNotEmpty())
         if (sbn.notification.extras
                 .getCharSequence(Notification.EXTRA_TEXT)?.toString()?.trim() != secret
         ) return
