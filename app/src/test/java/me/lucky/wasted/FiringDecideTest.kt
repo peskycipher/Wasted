@@ -16,7 +16,7 @@ class FiringDecideTest {
     @Test
     fun `gate closed when app disabled or trigger bit unset`() {
         planFor(enabled = false, triggers = T, wipe = true, recast = true).let {
-            assertFalse(it.fires && it.lock && it.wipeData && it.recast)
+            assertFalse(it.fires || it.wipeData || it.recast)
         }
         planFor(enabled = true, triggers = 0, wipe = true, recast = true).let {
             assertFalse(it.fires)
@@ -26,7 +26,7 @@ class FiringDecideTest {
     @Test
     fun `wipe and recast only when confirmed`() {
         val p = planFor(enabled = true, triggers = T, wipe = true, recast = true, confirmable = false)
-        assertTrue(p.fires && p.lock)
+        assertTrue(p.fires)
         assertFalse(p.wipeData || p.recast)
         assertTrue(p.requiresConfirmation)
     }
@@ -34,14 +34,14 @@ class FiringDecideTest {
     @Test
     fun `confirmed plan wipes and recasts when configured`() {
         val p = planFor(enabled = true, triggers = T, wipe = true, recast = true, confirmable = true)
-        assertTrue(p.fires && p.lock && p.wipeData && p.recast)
+        assertTrue(p.fires && p.wipeData && p.recast)
         assertTrue(p.requiresConfirmation)
     }
 
     @Test
     fun `unconfirmed plan when nothing destructive is configured`() {
         val p = planFor(enabled = true, triggers = T, wipe = false, recast = false, confirmable = false)
-        assertTrue(p.fires && p.lock)
+        assertTrue(p.fires)
         assertFalse(p.wipeData || p.recast || p.requiresConfirmation)
     }
 

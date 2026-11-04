@@ -11,9 +11,9 @@ import me.lucky.wasted.admin.DeviceAdminManager
 // the fire policy for a trigger, decided up front so the destructive
 // sequence is inspectable before anything runs
 data class FirePlan(
-    // false = trigger gate failed, nothing should execute
+    // false = trigger gate failed, nothing should execute (lock included);
+    // true also means lockNow() runs
     val fires: Boolean,
-    val lock: Boolean,
     val wipeData: Boolean,
     val recast: Boolean,
     // destructive action is configured and a UI caller should confirm first
@@ -37,12 +37,13 @@ object Firing {
         isRecastEnabled: Boolean,
         confirmable: Boolean,
     ): FirePlan {
-        val destructive = isWipeData || isRecastEnabled
+        val fires = enabled && triggers.and(trigger.value) != 0
+        // the gate zeroes the destructive steps: a closed plan carries nothing
+        val destructive = fires && (isWipeData || isRecastEnabled)
         return FirePlan(
-            fires = enabled && triggers.and(trigger.value) != 0,
-            lock = enabled && triggers.and(trigger.value) != 0,
-            wipeData = isWipeData && confirmable,
-            recast = isRecastEnabled && confirmable,
+            fires = fires,
+            wipeData = fires && isWipeData && confirmable,
+            recast = fires && isRecastEnabled && confirmable,
             requiresConfirmation = destructive,
         )
     }

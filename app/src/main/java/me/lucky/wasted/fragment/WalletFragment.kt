@@ -131,8 +131,7 @@ class WalletFragment : Fragment() {
         val currency = prefs.walletTopupCurrency
         // switching currency mid-life would strand settled invoices in the old
         // denomination (no conversion exists): require a clean ledger
-        val settled = flow.ledger().invoices.any { it.status == WalletLedger.STATUS_SETTLED }
-        if (settled && !flow.balance().currency.equals(currency, ignoreCase = true)) {
+        if (flow.requiresLedgerReset(currency)) {
             MaterialAlertDialogBuilder(ctx)
                 .setTitle(R.string.wallet_currency_switch_title)
                 .setMessage(
@@ -143,7 +142,7 @@ class WalletFragment : Fragment() {
                     ),
                 )
                 .setPositiveButton(android.R.string.ok) { _, _ ->
-                    flow.resetLedger()
+                    flow.resetCurrency(currency)
                     render()
                     showTopupDialog(currency)
                 }

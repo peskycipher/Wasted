@@ -8,69 +8,42 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 
 import me.lucky.wasted.Preferences
 import me.lucky.wasted.R
 import me.lucky.wasted.Trigger
 import me.lucky.wasted.fire.Fire
-import me.lucky.wasted.Utils
 import me.lucky.wasted.trigger.airplane.AirplaneReceiver
 import me.lucky.wasted.trigger.lock.LockJobManager
 
 class ForegroundService : Service() {
     companion object {
+        // desired receiver registration, carried as extras by the reconciler;
+        // sticky restarts (null intent) re-derive from prefs
+        const val EXTRA_REGISTER_LOCK = "register_lock"
+        const val EXTRA_REGISTER_AIRPLANE = "register_airplane"
         private const val NOTIFICATION_ID = 1000
-        private const val ACTION_USB_STATE = "android.hardware.usb.action.USB_STATE"
     }
 
     private lateinit var prefs: Preferences
-    private lateinit var lockReceiver: LockReceiver
-    private val usbReceiver = UsbReceiver()
+    private var lockReceiver: LockReceiver? = null
     private val airplaneReceiver = AirplaneReceiver()
+    private var registeredLock = false
+    private var registeredAirplane = false
 
     override fun onCreate() {
         super.onCreate()
-        init()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        deinit()
-    }
-
-    private fun init() {
-        prefs = Preferences.new(this)
-        lockReceiver = LockReceiver(getSystemService(KeyguardManager::class.java).isDeviceLocked)
-        val triggers = prefs.triggers
-        if (triggers.and(Trigger.LOCK.value) != 0)
-            registerReceiver(lockReceiver, IntentFilter().apply {
-                addAction(Intent.ACTION_USER_PRESENT)
-                addAction(Intent.ACTION_SCREEN_OFF)
-            })
-        if (triggers.and(Trigger.USB.value) != 0)
-            registerReceiver(usbReceiver, IntentFilter(ACTION_USB_STATE))
-        if (triggers.and(Trigger.AIRPLANE_MODE.value) != 0) {
-            registerReceiver(
-                airplaneReceiver,
-                IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED),
-            )
-            // catch airplane mode turned on while the service was dead
-            if (AirplaneReceiver.isOn(this)) Fire(this).fire(Trigger.AIRPLANE_MODE)
-        }
-    }
-
-    private fun deinit() {
-        val unregister: (BroadcastReceiver) -> Unit = {
-            try { unregisterReceiver(it) } catch (exc: IllegalArgumentException) {}
-        }
-        unregister(lockReceiver)
-        unregister(usbReceiver)
-        unregister(airplaneReceiver)
+        updateReceivers(null)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        // manifest UsbReceiver owns USB events outright (USB_STATE cannot be
+        // manifest-delivered, while DEVICE/ACCESSORY_ATTACHED can and fire
+        // regardless of this service — a second receiver here only double-fires)
+        val register = receiverSet(intent)
         startForeground(
             NOTIFICATION_ID,
             NotificationCompat.Builder(this, NotificationManager.CHANNEL_DEFAULT_ID)
@@ -79,10 +52,52 @@ class ForegroundService : Service() {
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build()
         )
+        updateReceivers(intent)
         return START_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? { return null }
+
+    private fun updateReceivers(intent: Intent?) {
+        val (registerLock, registerAirplane) = receiverSet(intent)
+        if (registerLock && !registeredLock) {
+            lockReceiver = LockReceiver(
+                getSystemService(KeyguardManager::class.java).isDeviceLocked,
+            )
+            registerReceiver(lockReceiver, IntentFilter().apply {
+                addAction(Intent.ACTION_USER_PRESENT)
+                addAction(Intent.ACTION_SCREEN_OFF)
+            })
+            registeredLock = true
+        }
+        if (registerAirplane && !registeredAirplane) {
+            registerReceiver(
+                airplaneReceiver,
+                IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED),
+            )
+            registeredAirplane = true
+            // catch airplane mode turned on while the service was dead
+            if (AirplaneReceiver.isOn(this)) Fire(this).fire(Trigger.AIRPLANE_MODE)
+        }
+    }
+
+    private fun receiverSet(intent: Intent?): Pair<Boolean, Boolean> =
+        if (intent != null) {
+            intent.getBooleanExtra(EXTRA_REGISTER_LOCK, false) to
+                intent.getBooleanExtra(EXTRA_REGISTER_AIRPLANE, false)
+        } else {
+            val triggers = Preferences.new(this).triggers
+            (triggers.and(Trigger.LOCK.value) != 0) to
+                (triggers.and(Trigger.AIRPLANE_MODE.value) != 0)
+        }
+
+    private fun deinit() {
+        val unregister: (BroadcastReceiver) -> Unit = {
+            try { unregisterReceiver(it) } catch (exc: IllegalArgumentException) {}
+        }
+        if (registeredLock) lockReceiver?.let { unregister(it) }
+        if (registeredAirplane) unregister(airplaneReceiver)
+    }
 
     private class LockReceiver(private var locked: Boolean) : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -105,30 +120,22 @@ class ForegroundService : Service() {
             private val ctx: Context,
             private val pendingResult: PendingResult,
         ) : Runnable {
+            companion object { private const val MAX_ATTEMPTS = 5 }
             override fun run() {
                 val job = LockJobManager(ctx)
                 var delay = 1000L
-                while (job.schedule() != JobScheduler.RESULT_SUCCESS) {
-                    Thread.sleep(delay)
-                    delay = delay.shl(1)
+                for (attempt in 1..MAX_ATTEMPTS) {
+                    if (job.schedule() == JobScheduler.RESULT_SUCCESS) {
+                        pendingResult.finish()
+                        return
+                    }
+                    Log.w("ForegroundService", "lock job schedule refused (attempt $attempt)")
+                    try { Thread.sleep(delay); delay = delay.shl(1) } catch (_: InterruptedException) { return }
                 }
+                // loud give-up: a refused schedule means no wipe-on-lock
+                Log.w("ForegroundService", "lock job scheduling gave up after $MAX_ATTEMPTS attempts")
                 pendingResult.finish()
             }
-        }
-    }
-
-    private class UsbReceiver : BroadcastReceiver() {
-        companion object {
-            private const val KEY_1 = "connected"
-            private const val KEY_2 = "host_connected"
-        }
-
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action != ACTION_USB_STATE) return
-            if (!Utils(context ?: return).isDeviceLocked()) return
-            val extras = intent.extras ?: return
-            if (!extras.getBoolean(KEY_1) && !extras.getBoolean(KEY_2)) return
-            Fire(context).fire(Trigger.USB)
         }
     }
 }

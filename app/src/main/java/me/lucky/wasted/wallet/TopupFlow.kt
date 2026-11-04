@@ -58,6 +58,17 @@ class TopupFlow(val api: BtcpayApi, private val store: WalletStore) {
         store.walletInvoices = ""
     }
 
+    // switching currencies strands settled invoices in the old denomination
+    // (no conversion exists): a reset is required first
+    fun requiresLedgerReset(currency: String): Boolean =
+        ledger().invoices.any { it.status == WalletLedger.STATUS_SETTLED } &&
+            !balance().currency.equals(currency, ignoreCase = true)
+
+    fun resetCurrency(currency: String) {
+        store.walletTopupCurrency = currency
+        store.walletInvoices = ""
+    }
+
     fun ledger(): WalletLedger = WalletLedger.fromJson(store.walletInvoices)
 
     // balance currency: the ledger's own (first settled) currency, which

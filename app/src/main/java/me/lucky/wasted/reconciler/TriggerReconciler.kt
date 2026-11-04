@@ -104,7 +104,7 @@ class TriggerReconciler(private val ctx: Context) {
             val on = d.enabledTriggers.contains(trigger)
             classes.forEach { setComponentEnabled(it, on) }
         }
-        setForegroundEnabled(d.foregroundRequired)
+        setForegroundEnabled(d)
         setComponentEnabled(UsbReceiver::class.java, d.usbReceiver)
         setComponentEnabled(RestartReceiver::class.java, d.restartReceiver)
         setGeofenceService(d.geofenceService)
@@ -118,9 +118,14 @@ class TriggerReconciler(private val ctx: Context) {
         }
     }
 
-    private fun setForegroundEnabled(enabled: Boolean) =
+    private fun setForegroundEnabled(d: DesiredState) =
         Intent(ctx.applicationContext, ForegroundService::class.java).also {
-            if (enabled) ContextCompat.startForegroundService(ctx.applicationContext, it)
+            if (d.enabledTriggers.contains(Trigger.LOCK))
+                it.putExtra(ForegroundService.EXTRA_REGISTER_LOCK, true)
+            if (d.enabledTriggers.contains(Trigger.AIRPLANE_MODE))
+                it.putExtra(ForegroundService.EXTRA_REGISTER_AIRPLANE, true)
+            if (d.foregroundRequired)
+                ContextCompat.startForegroundService(ctx.applicationContext, it)
             else ctx.stopService(it)
         }
 
